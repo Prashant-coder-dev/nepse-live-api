@@ -20,7 +20,7 @@ NEPSE_API_URL = "https://nepselytics-6d61dea19f30.herokuapp.com/api/nepselytics/
 def read_root():
     return {"message": "Welcome to the NEPSE Live API Proxy. Use /api/live to get data."}
 
-@app.get("/api/live")
+@app.get("/api")
 def get_live_data():
     try:
         response = requests.get(NEPSE_API_URL)
@@ -29,6 +29,22 @@ def get_live_data():
         
         if data.get("success"):
             return data.get("data", [])
+        else:
+            raise HTTPException(status_code=500, detail="External API returned an unsuccessful status.")
+            
+    except requests.exceptions.RequestException as e:
+        raise HTTPException(status_code=502, detail=f"Error fetching data from source API: {str(e)}")
+
+@app.get("/ipo")
+def get_ipo_data(page: int = 1, size: int = 20):
+    try:
+        url = f"https://nepselytics-6d61dea19f30.herokuapp.com/api/nepselytics/ipo?type=0&for=2&page={page}&size={size}"
+        response = requests.get(url)
+        response.raise_for_status()
+        data = response.json()
+        
+        if data.get("success"):
+            return data.get("data")
         else:
             raise HTTPException(status_code=500, detail="External API returned an unsuccessful status.")
             
